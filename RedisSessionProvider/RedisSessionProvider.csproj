@@ -1,0 +1,98 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{DC800DD5-00A0-4CDE-A4D7-705C1445B751}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>RedisSessionProvider</RootNamespace>
+    <AssemblyName>RedisSessionProvider</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup>
+    <LangVersion>8</LangVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Web" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BinarySerializer.cs" />
+    <Compile Include="ChangeTrackingSessionStateItemCollection.cs" />
+    <Compile Include="ICacheConnection.cs" />
+    <Compile Include="IRedisClientConnection.cs" />
+    <Compile Include="ISerializer.cs" />
+    <Compile Include="KeyGenerator.cs" />
+    <Compile Include="LogUtility.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ProviderConfiguration.cs" />
+    <Compile Include="RedisConnectionWrapper.cs" />
+    <Compile Include="RedisNull.cs" />
+    <Compile Include="RedisProviderResource.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>RedisProviderResource.resx</DependentUpon>
+    </Compile>
+    <Compile Include="RedisSessionStateProvider.cs" />
+    <Compile Include="RedisSharedConnection.cs" />
+    <Compile Include="RedisUtility.cs" />
+    <Compile Include="redisWrapper\commands\AppendCommand.cs" />
+    <Compile Include="redisWrapper\commands\DelCommand.cs" />
+    <Compile Include="redisWrapper\commands\DumpCommand.cs" />
+    <Compile Include="redisWrapper\commands\EchoCommand.cs" />
+    <Compile Include="redisWrapper\commands\ExistsCommand.cs" />
+    <Compile Include="redisWrapper\commands\ExpireAtCommand.cs" />
+    <Compile Include="redisWrapper\commands\ExpireCommand.cs" />
+    <Compile Include="redisWrapper\commands\GetCommand.cs" />
+    <Compile Include="redisWrapper\commands\PExpireAtCommand.cs" />
+    <Compile Include="redisWrapper\commands\PExpireCommand.cs" />
+    <Compile Include="redisWrapper\commands\PingCommand.cs" />
+    <Compile Include="redisWrapper\commands\SetCommand.cs" />
+    <Compile Include="redisWrapper\commands\TimeCommand.cs" />
+    <Compile Include="redisWrapper\IRedisCommand.cs" />
+    <Compile Include="redisWrapper\RedisClient.cs" />
+    <Compile Include="redisWrapper\RedisClientConnection.cs" />
+    <Compile Include="redisWrapper\RedisException.cs" />
+    <Compile Include="redisWrapper\RedisReply.cs" />
+    <Compile Include="ValueWrapper.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="RedisProviderResource.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>RedisProviderResource.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="ClientConnection\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+</Project>
