@@ -1,4 +1,4 @@
-﻿using RedisSessionProvider.redisWrapper.commands;
+using RedisSessionProvider.redisWrapper.commands;
 using RedisSessionProvider.redisWrapper.commands.Commands;
 using System;
 using System.Linq;
@@ -28,22 +28,31 @@ namespace RedisSessionProvider.redisWrapper
             }
         }
 
-        public RedisClient(string host = "127.0.0.1", int port = 6379)
+        public RedisClient(string _host = "127.0.0.1", int _port = 6379)
         {
-            if (string.IsNullOrEmpty(host))
-                throw new ArgumentNullException(nameof(host));
-            this.Host = host;
-            this.Port = port;
+            if (string.IsNullOrEmpty(_host))
+                throw new ArgumentNullException(nameof(_host));
+            this.Host = _host;
+            this.Port = _port;
             client = new TcpClient();
+
+        }
+        public void Connect()
+        {
             try
             {
-                client.Connect(host, port);
+                client.Connect(Host, Port);
                 stream = client.GetStream();
             }
             catch (Exception ex)
             {
-                throw new RedisException("An existing connection was forcibly closed by remote host.");
+                throw new RedisException("An existing connection was forcibly closed by remote host." + ex.Message);
             }
+        }
+        public void Close()
+        {
+            stream.Close();
+            client.Close();
         }
 
         public void Append(string key, string value)
@@ -99,6 +108,99 @@ namespace RedisSessionProvider.redisWrapper
             Execute(command);
             return (string)reply.Value;
         }
+        //NLUA - lua sxcrip
+        internal object ScriptEvaluate(string script, string[] redisKeyArgs, object[] redisValueArgs)
+        {
+            //throw new NotImplementedException();
+            string args = " " +redisKeyArgs.Length.ToString() + " ";
+            args += string.Join(" ", redisKeyArgs) + " ";
+
+            //for (int i = 0; i < redisKeyArgs.Length; i++)
+            //{
+            //    args = script.Replace($"KEYS[{i + 1}]", "\"" + redisKeyArgs[i] + "\"");
+            //}
+
+            for (int i = 0; i < redisValueArgs.Length; i++)
+            {
+                args = args + " " +  redisValueArgs[i].ToString();
+            }
+
+
+            // Lua state = new Lua();
+
+            //var returnVal = state.DoString(script);
+
+
+            //Script scr = new Script();
+            //DynValue res = scr.DoString(script);
+
+            //DynValue res = script.Call(script.Globals["fact"], 4);
+            var k = System.Environment.NewLine;
+           //script= script.Replace(System.Environment.NewLine, ";");
+
+           // script = script.Remove(script.IndexOf(';'),1);
+            string evalScript = "EVAL " + "\"" + script + "\"" + args + k;
+
+            //string evalScript = "EVAL \"return redis.call('SET',KEYS[1],ARGV[1]);\" 1 keyname_1 valname_1"+k;
+            byte[] bytes = Encoding.UTF8.GetBytes(evalScript);
+            try
+            {
+                stream.Write(bytes, 0, bytes.Length);
+                stream.Flush();
+                bytes = new byte[client.ReceiveBufferSize + 1];
+                stream.Read(bytes, 0, bytes.Length);
+                var result = Encoding.UTF8.GetString(bytes);
+                switch (result[0])
+                {
+                    case '$':
+                        {
+                            var length = Convert.ToInt32(result.Substring(1, result.IndexOf(Environment.NewLine) - 1));
+                            if (length == -1)
+                                reply = new RedisReply(RESPType.BulkString, null);
+                            else
+                                reply = new RedisReply(RESPType.BulkString, result.Substring(result.IndexOf(Environment.NewLine) + 2, length));
+                            break;
+                        }
+
+                    case '+':
+                        {
+                            reply = new RedisReply(RESPType.SimpleString, result.Substring(1, result.IndexOf(Environment.NewLine) - 1));
+                            break;
+                        }
+
+                    case ':':
+                        {
+                            reply = new RedisReply(RESPType.Integer, Convert.ToInt32(result.Substring(1, result.IndexOf(Environment.NewLine) - 1)));
+                            break;
+                        }
+
+                    case '-':
+                        {
+                            reply = new RedisReply(RESPType.Error, result.Substring(1, result.IndexOf(Environment.NewLine) - 1));
+                            throw new RedisException(reply.Value.ToString());
+                            break;
+                        }
+
+                    case '*':
+                        {
+                            var count = Convert.ToInt32(result.Substring(1, result.IndexOf(Environment.NewLine) - 1));
+                            var items = result.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).ToList<string>();
+                            items.RemoveAt(0);
+                            items.RemoveAll(i => i.StartsWith("$"));
+                            items.RemoveAt(items.Count - 1);
+                            reply = new RedisReply(RESPType.Array, items);
+                            break;
+                        }
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new RedisException($"There is an internal error during executing '{command.GetCommand()}'.");
+            }
+            return reply;
+        }
+
+
 
         public void PExpire(string key, int timeout)
         {
